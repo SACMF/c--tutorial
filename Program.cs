@@ -4,24 +4,146 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 
-class Student
+// Öğrenci sınıfı
+public class Student
 {
     public int Id { get; set; }
-    public string Ad { get; set; }
-    public string Soyad { get; set; }
-    public string Email { get; set; }
+    public string? Ad { get; set; }
+    public string? Soyad { get; set; }
+    public string? Email { get; set; }
     public int OgrenciNo { get; set; }
+}
+
+// Öğrenci işlemleri
+public class StudentManager
+{
+    private const string DataFile = "ogrenciler.json";
+    private List<Student> students = new List<Student>();
+
+    // Verileri dosyadan yükle
+    public void Yukle()
+    {
+        if (File.Exists(DataFile))
+        {
+            try
+            {
+                string json = File.ReadAllText(DataFile);
+                students = JsonSerializer.Deserialize<List<Student>>(json) ?? new List<Student>();
+            }
+            catch
+            {
+                Console.WriteLine("Dosya yüklenirken hata oluştu.");
+                students = new List<Student>();
+            }
+        }
+    }
+
+    // Verileri dosyaya kaydet
+    public void Kaydet()
+    {
+        try
+        {
+            string json = JsonSerializer.Serialize(students, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(DataFile, json);
+        }
+        catch
+        {
+            Console.WriteLine("Dosya kaydedilirken hata oluştu!");
+        }
+    }
+
+    // Öğrenci ekle
+    public void EkleOgrenci(string? ad, string? soyad, string? email, int ogrenciNo)
+    {
+        Student yeniOgrenci = new Student
+        {
+            Id = students.Count > 0 ? students.Max(s => s.Id) + 1 : 1,
+            Ad = ad,
+            Soyad = soyad,
+            Email = email,
+            OgrenciNo = ogrenciNo
+        };
+
+        students.Add(yeniOgrenci);
+        Kaydet();
+        Console.WriteLine("Öğrenci başarıyla eklendi!");
+    }
+
+    // Öğrenci listesini göster
+    public void ListeleOgrenciler()
+    {
+        if (students.Count == 0)
+        {
+            Console.WriteLine("Kayıtlı öğrenci yok.");
+            return;
+        }
+
+        Console.WriteLine(new string('-', 80));
+        Console.WriteLine($"{"ID",-5} {"Ad",-15} {"Soyadı",-15} {"Email",-25} {"Öğrenci No",-10}");
+        Console.WriteLine(new string('-', 80));
+
+        foreach (var ogrenci in students)
+        {
+            Console.WriteLine($"{ogrenci.Id,-5} {ogrenci.Ad,-15} {ogrenci.Soyad,-15} {ogrenci.Email,-25} {ogrenci.OgrenciNo,-10}");
+        }
+
+        Console.WriteLine(new string('-', 80));
+        Console.WriteLine($"Toplam öğrenci: {students.Count}");
+    }
+
+    // Öğrenci sil
+    public void SilOgrenci(int id)
+    {
+        Student? silinecek = students.FirstOrDefault(s => s.Id == id);
+        if (silinecek != null)
+        {
+            students.Remove(silinecek);
+            Kaydet();
+            Console.WriteLine("Öğrenci başarıyla silindi!");
+        }
+        else
+        {
+            Console.WriteLine("Öğrenci bulunamadı!");
+        }
+    }
+
+    // Öğrenci güncelle
+    public void GuncelleOgrenci(int id, string? ad, string? soyad, string? email, int ogrenciNo)
+    {
+        Student? ogrenci = students.FirstOrDefault(s => s.Id == id);
+        if (ogrenci == null)
+        {
+            Console.WriteLine("Öğrenci bulunamadı!");
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(ad))
+            ogrenci.Ad = ad;
+        if (!string.IsNullOrEmpty(soyad))
+            ogrenci.Soyad = soyad;
+        if (!string.IsNullOrEmpty(email))
+            ogrenci.Email = email;
+        if (ogrenciNo > 0)
+            ogrenci.OgrenciNo = ogrenciNo;
+
+        Kaydet();
+        Console.WriteLine("Öğrenci başarıyla güncellendi!");
+    }
+
+    // ID'ye göre öğrenci bul
+    public Student? BulOgrenci(int id)
+    {
+        return students.FirstOrDefault(s => s.Id == id);
+    }
 }
 
 class Program
 {
-    private const string DataFile = "ogrenciler.json";
-    private static List<Student> students = new List<Student>();
-
     static void Main()
     {
-        YukleogrenciListesi();
-        
+        StudentManager manager = new StudentManager();
+        manager.Yukle();
+
         while (true)
         {
             Console.WriteLine("\n========== Öğrenci Yönetim Sistemi ==========");
@@ -31,22 +153,23 @@ class Program
             Console.WriteLine("4. Öğrenci Güncelle");
             Console.WriteLine("5. Çıkış");
             Console.Write("Seçiminiz: ");
-            
-            string secim = Console.ReadLine();
-            
+
+            string? secim = Console.ReadLine();
+
             switch (secim)
             {
                 case "1":
-                    OgrenciEkle();
+                    OgrenciEkleMenu(manager);
                     break;
                 case "2":
-                    OgrenciListele();
+                    Console.WriteLine("\n--- Öğrenci Listesi ---");
+                    manager.ListeleOgrenciler();
                     break;
                 case "3":
-                    OgrenciSil();
+                    OgrenciSilMenu(manager);
                     break;
                 case "4":
-                    OgrenciGuncelle();
+                    OgrenciGuncelleMenu(manager);
                     break;
                 case "5":
                     Console.WriteLine("Programdan çıkılıyor...");
@@ -58,19 +181,19 @@ class Program
         }
     }
 
-    static void OgrenciEkle()
+    static void OgrenciEkleMenu(StudentManager manager)
     {
         Console.WriteLine("\n--- Yeni Öğrenci Ekle ---");
-        
+
         Console.Write("Ad: ");
-        string ad = Console.ReadLine();
-        
+        string? ad = Console.ReadLine();
+
         Console.Write("Soyadı: ");
-        string soyad = Console.ReadLine();
-        
+        string? soyad = Console.ReadLine();
+
         Console.Write("Email: ");
-        string email = Console.ReadLine();
-        
+        string? email = Console.ReadLine();
+
         Console.Write("Öğrenci No: ");
         if (!int.TryParse(Console.ReadLine(), out int ogrenciNo))
         {
@@ -78,140 +201,59 @@ class Program
             return;
         }
 
-        Student yeniOgrenci = new Student
-        {
-            Id = students.Count > 0 ? students.Max(s => s.Id) + 1 : 1,
-            Ad = ad,
-            Soyad = soyad,
-            Email = email,
-            OgrenciNo = ogrenciNo
-        };
-
-        students.Add(yeniOgrenci);
-        KaydetOgrenciListesi();
-        Console.WriteLine("Öğrenci başarıyla eklendi!");
+        manager.EkleOgrenci(ad, soyad, email, ogrenciNo);
     }
 
-    static void OgrenciListele()
-    {
-        Console.WriteLine("\n--- Öğrenci Listesi ---");
-        
-        if (students.Count == 0)
-        {
-            Console.WriteLine("Kayıtlı öğrenci yok.");
-            return;
-        }
-
-        Console.WriteLine(new string('-', 80));
-        Console.WriteLine($"{"ID",-5} {"Ad",-15} {"Soyadı",-15} {"Email",-25} {"Öğrenci No",-10}");
-        Console.WriteLine(new string('-', 80));
-        
-        foreach (var ogrenci in students)
-        {
-            Console.WriteLine($"{ogrenci.Id,-5} {ogrenci.Ad,-15} {ogrenci.Soyad,-15} {ogrenci.Email,-25} {ogrenci.OgrenciNo,-10}");
-        }
-        
-        Console.WriteLine(new string('-', 80));
-        Console.WriteLine($"Toplam öğrenci: {students.Count}");
-    }
-
-    static void OgrenciSil()
+    static void OgrenciSilMenu(StudentManager manager)
     {
         Console.WriteLine("\n--- Öğrenci Sil ---");
-        
-        OgrenciListele();
-        
-        Console.Write("Silinecek öğrencinin ID'sini girin: ");
+
+        manager.ListeleOgrenciler();
+
+        Console.Write("\nSilinecek öğrencinin ID'sini girin: ");
         if (!int.TryParse(Console.ReadLine(), out int id))
         {
             Console.WriteLine("Geçersiz ID!");
             return;
         }
 
-        Student silinecek = students.FirstOrDefault(s => s.Id == id);
-        if (silinecek != null)
-        {
-            students.Remove(silinecek);
-            KaydetOgrenciListesi();
-            Console.WriteLine("Öğrenci başarıyla silindi!");
-        }
-        else
-        {
-            Console.WriteLine("Öğrenci bulunamadı!");
-        }
+        manager.SilOgrenci(id);
     }
 
-    static void OgrenciGuncelle()
+    static void OgrenciGuncelleMenu(StudentManager manager)
     {
         Console.WriteLine("\n--- Öğrenci Güncelle ---");
-        
-        OgrenciListele();
-        
-        Console.Write("Güncellenecek öğrencinin ID'sini girin: ");
+
+        manager.ListeleOgrenciler();
+
+        Console.Write("\nGüncellenecek öğrencinin ID'sini girin: ");
         if (!int.TryParse(Console.ReadLine(), out int id))
         {
             Console.WriteLine("Geçersiz ID!");
             return;
         }
 
-        Student ogrenci = students.FirstOrDefault(s => s.Id == id);
+        Student? ogrenci = manager.BulOgrenci(id);
         if (ogrenci == null)
         {
             Console.WriteLine("Öğrenci bulunamadı!");
             return;
         }
 
-        Console.Write("Yeni Ad (Şimdiki: " + ogrenci.Ad + "): ");
-        string yeniAd = Console.ReadLine();
-        if (!string.IsNullOrEmpty(yeniAd))
-            ogrenci.Ad = yeniAd;
+        Console.Write("Yeni Ad (Enter ile geç): ");
+        string? yeniAd = Console.ReadLine();
 
-        Console.Write("Yeni Soyadı (Şimdiki: " + ogrenci.Soyad + "): ");
-        string yeniSoyad = Console.ReadLine();
-        if (!string.IsNullOrEmpty(yeniSoyad))
-            ogrenci.Soyad = yeniSoyad;
+        Console.Write("Yeni Soyadı (Enter ile geç): ");
+        string? yeniSoyad = Console.ReadLine();
 
-        Console.Write("Yeni Email (Şimdiki: " + ogrenci.Email + "): ");
-        string yeniEmail = Console.ReadLine();
-        if (!string.IsNullOrEmpty(yeniEmail))
-            ogrenci.Email = yeniEmail;
+        Console.Write("Yeni Email (Enter ile geç): ");
+        string? yeniEmail = Console.ReadLine();
 
-        Console.Write("Yeni Öğrenci No (Şimdiki: " + ogrenci.OgrenciNo + "): ");
-        string noInput = Console.ReadLine();
-        if (int.TryParse(noInput, out int yeniNo))
-            ogrenci.OgrenciNo = yeniNo;
+        Console.Write("Yeni Öğrenci No (Enter ile geç): ");
+        int yeniNo = 0;
+        if (int.TryParse(Console.ReadLine(), out int temp))
+            yeniNo = temp;
 
-        KaydetOgrenciListesi();
-        Console.WriteLine("Öğrenci başarıyla güncellendi!");
-    }
-
-    static void YukleogrenciListesi()
-    {
-        if (File.Exists(DataFile))
-        {
-            try
-            {
-                string json = File.ReadAllText(DataFile);
-                students = JsonSerializer.Deserialize<List<Student>>(json) ?? new List<Student>();
-            }
-            catch
-            {
-                Console.WriteLine("Dosya yüklenirken hata oluştu. Yeni liste oluşturulacak.");
-                students = new List<Student>();
-            }
-        }
-    }
-
-    static void KaydetOgrenciListesi()
-    {
-        try
-        {
-            string json = JsonSerializer.Serialize(students, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(DataFile, json);
-        }
-        catch
-        {
-            Console.WriteLine("Dosya kaydedilirken hata oluştu!");
-        }
+        manager.GuncelleOgrenci(id, yeniAd, yeniSoyad, yeniEmail, yeniNo);
     }
 }
