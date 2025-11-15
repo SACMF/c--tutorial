@@ -1,0 +1,40 @@
+# Build results
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+
+# Visual Studio
+.vs/
+.vscode/
+*.user
+*.userosscache
+*.sln.docstates
+
+# User-specific files
+*.rsuser
+*.suo
+*.VC.db
+
+# NuGet
+*.nupkg
+*.nuspec
+packages/
+.nuget/
+
+# Local environment
+.env
+.env.local
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# Runtime
+*.log
