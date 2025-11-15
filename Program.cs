@@ -28,7 +28,12 @@ public class StudentManager
             try
             {
                 string json = File.ReadAllText(DataFile);
-                students = JsonSerializer.Deserialize<List<Student>>(json) ?? new List<Student>();
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                    WriteIndented = true
+                };
+                students = JsonSerializer.Deserialize<List<Student>>(json, options) ?? new List<Student>();
             }
             catch
             {
@@ -43,7 +48,12 @@ public class StudentManager
     {
         try
         {
-            string json = JsonSerializer.Serialize(students, new JsonSerializerOptions { WriteIndented = true });
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            };
+            string json = JsonSerializer.Serialize(students, options);
             File.WriteAllText(DataFile, json);
         }
         catch
@@ -147,7 +157,7 @@ class Program
         while (true)
         {
             Console.WriteLine("\n========== Öğrenci Yönetim Sistemi ========");
-            Console.WriteLine("1. Öğrenci Ekle");
+            Console.WriteLine("1. Öğrenci Ekle recvep");
             Console.WriteLine("2. Öğrenci Listele");
             Console.WriteLine("3. Öğrenci Sil");
             Console.WriteLine("4. Öğrenci Güncelle");
