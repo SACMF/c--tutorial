@@ -5,5 +5,12 @@
     "Soyad": "dur",
     "Email": "eer",
     "OgrenciNo": 12
+  },
+  {
+    "Id": 2,
+    "Ad": "mehmet",
+    "Soyad": "c\u0131t\u0131r",
+    "Email": "dfssdf",
+    "OgrenciNo": 344
   }
 ]
