@@ -146,7 +146,7 @@ class Program
 
         while (true)
         {
-            Console.WriteLine("\n========== Öğrenci Yönetim Sistemi ==========");
+            Console.WriteLine("\n========== Öğrenci Yönetim Sistemi ========");
             Console.WriteLine("1. Öğrenci Ekle");
             Console.WriteLine("2. Öğrenci Listele");
             Console.WriteLine("3. Öğrenci Sil");
